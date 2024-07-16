@@ -25,8 +25,8 @@ const userController = {
 
     async createUser(req, res) {
         try {
-            const createUser = await User.create(req.body)
-            res.status(200).json(createUser)
+            const newUser = await User.create(req.body)
+            res.status(200).json(newUser)
         } catch (error) {
             console.error(error)
             res.status(500).json(error)
@@ -35,6 +35,12 @@ const userController = {
 
     async updateUser(req, res) {
         try {
+            const update = await User.findOneAndUpdate(
+                {_id:req.params.userId},
+                {$set:req.body},
+                {runValidators:true, new:true}
+            )
+            res.status(200).json(update)
             
         } catch (error) {
             console.error(error)
@@ -44,7 +50,12 @@ const userController = {
 
     async deleteUser(req, res) {
         try {
-            
+            const deleteDude = await User.findOneAndDelete(
+                {_id:req.params.userId},
+        
+            )
+            await Thought.deleteMany({_id:{$in:deleteDude.thoughts}})
+            res.status(200).json(deleteDude)
         } catch (error) {
             console.error(error)
             res.status(500).json(error)
@@ -53,7 +64,12 @@ const userController = {
 
     async addFriend(req, res) {
         try {
-            
+            const addDude = await User.findOneAndUpdate(
+                {_id:req.params.userId},
+                {$addToSet:{friends:req.params.friendId}},
+                {new:true},
+                )
+                res.status(200).json(addDude)
         } catch (error) {
             console.error(error)
             res.status(500).json(error)
@@ -62,7 +78,12 @@ const userController = {
 
     async removeFriend(req, res) {
         try {
-            
+            const deleteDude = await User.findOneAndUpdate(
+                {_id:req.params.userId},
+                {$pull:{friends:req.params.friendId}},
+                {new:true},
+                )
+                res.status(200).json(deleteDude)
         } catch (error) {
             console.error(error)
             res.status(500).json(error)
