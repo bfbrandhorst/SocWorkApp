@@ -14,7 +14,7 @@ const thoughtController = {
 
     async getOneThought(req,res) {
         try {
-            const singleThought = await Thought.findOne({_id:req.params.userId}).select('-__v').populate('thoughts')
+            const singleThought = await Thought.findOne({_id:req.params.thoughtId}).select('-__v')
             res.status(200).json(singleThought)
         } catch (error) {
             console.error(error)
@@ -35,7 +35,7 @@ const thoughtController = {
     async updateThought(req, res) {
         try {
             const update = await Thought.findOneAndUpdate(
-                {_id:req.params.userId},
+                {_id:req.params.thoughtId},
                 {$set:req.body},
                 {runValidators:true, new:true}
             )
@@ -50,10 +50,14 @@ const thoughtController = {
     async deleteThought(req, res) {
         try {
             const deleteMessage = await Thought.findOneAndDelete(
-                {_id:req.params.userId},
+                {_id:req.params.thoughtId},
         
             )
-            await Thought.deleteMany({_id:{$in:deleteMessage.thoughts}})
+            await User.findOneAndUpdate({thoughts:req.params.thoughtId},
+                {
+                    $pull:{thoughts:req.params.thoughtId}
+                },
+                {new:true})
             res.status(200).json(deleteMessage)
         } catch (error) {
             console.error(error)
@@ -64,8 +68,8 @@ const thoughtController = {
     async addReaction(req, res) {
         try {
             const addReact = await Thought.findOneAndUpdate(
-                {_id:req.params.userId},
-                {$addToSet:{friends:req.params.friendId}},
+                {_id:req.params.thoughtId},
+                {$addToSet:{reactions:req.body}},
                 {new:true},
                 )
                 res.status(200).json(addReact)
@@ -78,8 +82,8 @@ const thoughtController = {
     async removeReaction(req, res) {
         try {
             const deleteReact = await Thought.findOneAndUpdate(
-                {_id:req.params.userId},
-                {$pull:{friends:req.params.friendId}},
+                {_id:req.params.thoughtId},
+                {$pull:{reactions:{reactionId:req.params.reactionId}}},
                 {new:true},
                 )
                 res.status(200).json(deleteReact)
